@@ -1,7 +1,6 @@
 # 自動部署到 GitHub Pages：
-# push 到 main 分支時，自動 build 並發佈 dist/ 到 Pages。
-# configure-pages 的 enablement: true 會在首次執行時自動啟用
-# Pages（Source = GitHub Actions），不需手動到 Settings 設定。
+# push 到 main 分支時，自動 build 並把 dist/ 發佈到 gh-pages 分支。
+# GitHub 會自動為公開 repo 的 gh-pages 分支啟用 Pages，不需手動設定。
 name: Deploy to GitHub Pages
 
 on:
@@ -10,38 +9,24 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
       - run: npm run build
-      - uses: actions/upload-pages-artifact@v3
+      - uses: peaceiris/actions-gh-pages@v4
         with:
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
