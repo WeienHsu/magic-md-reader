@@ -8,7 +8,7 @@
 - **區域註解**：在預覽區選取任意文字（段落、句子、程式碼皆可），加上註解與螢光顏色
 - **註解側欄**：列出所有註解，點擊即捲動至對應位置；可編輯、改色、刪除
 - **多文件管理**：文件抽屜可建立、切換、刪除多份文件
-- **自動儲存**：所有文件與註解自動存入瀏覽器 localStorage（debounce 500ms）
+- **自動儲存**：所有文件與註解自動存入瀏覽器 IndexedDB（debounce 500ms；舊版 localStorage 資料會自動搬移）
 - **匯出 / 匯入**：
   - `匯出 MD` — 匯出純 Markdown 檔
   - `匯出＋註解` — 文件與註解打包成 `.anno.json`，可備份或分享給他人
@@ -21,7 +21,7 @@
 | 框架 | React 19 + TypeScript + Vite | 元件化 UI、型別安全、快速建置 |
 | Markdown 渲染 | [marked](https://marked.js.org/)（GFM） | 輕量、成熟 |
 | XSS 防護 | [DOMPurify](https://github.com/cure53/DOMPurify) | 渲染前消毒 HTML |
-| 資料保存 | localStorage + JSON 匯出/匯入 | GitHub Pages 無後端，本機自動存 + 檔案長期保存 |
+| 資料保存 | IndexedDB + JSON 匯出/匯入 | GitHub Pages 無後端，本機自動存（容量大、按筆寫入）+ 檔案長期保存 |
 | 部署 | GitHub Actions → GitHub Pages | push 到 main 即自動上線 |
 
 ### 註解錨定原理
@@ -51,7 +51,7 @@
 ### 資料流
 
 ```
-使用者編輯 ──▶ React state ──debounce 500ms──▶ localStorage（自動儲存）
+使用者編輯 ──▶ React state ──debounce 500ms──▶ IndexedDB（自動儲存，只寫有變動的記錄）
                    │
                    ├──▶ marked + DOMPurify ──▶ 預覽 DOM ──▶ applyHighlights() 套用螢光
                    │
@@ -64,7 +64,7 @@
 src/
 ├── types.ts                    # Doc / Annotation / ExportBundle 型別定義
 ├── lib/
-│   ├── storage.ts              # localStorage 讀寫（版本化 key、損毀容錯）
+│   ├── storage.ts              # IndexedDB 讀寫（差異寫入、舊版 localStorage 搬移、損毀容錯）
 │   ├── anchor.ts               # 註解錨定引擎（TextQuoteSelector 定位 + <mark> 包裹）
 │   └── exportImport.ts         # 匯出 / 匯入（JSON bundle 與純 MD）
 ├── components/
@@ -95,5 +95,5 @@ push 到 `main` 分支即可——`.github/workflows/deploy.yml` 會自動 build
 
 ## 資料保存注意事項
 
-- localStorage 為**單一瀏覽器本機**儲存：換裝置、換瀏覽器或清除網站資料都不會帶走內容
+- IndexedDB 為**單一瀏覽器本機**儲存：換裝置、換瀏覽器或清除網站資料都不會帶走內容
 - 重要文件請定期用「**匯出＋註解**」下載 `.anno.json` 備份；之後用「匯入」即可完整還原文件與所有註解
