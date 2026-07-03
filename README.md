@@ -86,9 +86,9 @@ npm run lint
 
 ## 部署到 GitHub Pages
 
-1. 到 repo 的 **Settings → Pages**，將 **Source** 設為 **GitHub Actions**（只需做一次）
-2. push 到 `main` 分支，`.github/workflows/deploy.yml` 會自動 build 並發佈
-3. 網站上線於 `https://<你的帳號>.github.io/magic-md-reader/`
+push 到 `main` 分支即可——`.github/workflows/deploy.yml` 會自動 build 並發佈，
+首次執行時也會自動啟用 Pages（Source = GitHub Actions），不需手動設定。
+網站上線於 `https://<你的帳號>.github.io/magic-md-reader/`
 
 > 若 repo 改名，記得同步修改 `vite.config.ts` 中的 `base` 路徑。
 
