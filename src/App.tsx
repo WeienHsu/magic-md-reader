@@ -5,6 +5,7 @@ import { exportBundle, exportMarkdown, parseImport } from './lib/exportImport'
 import { Preview } from './components/Preview'
 import { AnnotationSidebar } from './components/AnnotationSidebar'
 import { DocumentList } from './components/DocumentList'
+import { Feedback } from './components/Feedback'
 import './App.css'
 
 type Selector = Pick<Annotation, 'exact' | 'prefix' | 'suffix'>
@@ -217,6 +218,7 @@ export default function App() {
           >
             💬 {docAnnotations.length}
           </button>
+          <Feedback />
           <input
             ref={fileInputRef}
             type="file"
