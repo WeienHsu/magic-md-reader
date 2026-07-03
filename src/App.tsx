@@ -10,8 +10,9 @@ import './App.css'
 type Selector = Pick<Annotation, 'exact' | 'prefix' | 'suffix'>
 
 export default function App() {
-  const [data, setData] = useState<AppData>(loadData)
-  const [activeDocId, setActiveDocId] = useState<string | null>(data.docs[0]?.id ?? null)
+  const [data, setData] = useState<AppData>({ docs: [], annotations: [] })
+  const [loaded, setLoaded] = useState(false)
+  const [activeDocId, setActiveDocId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('split')
   const [showDocList, setShowDocList] = useState(false)
   const [showSidebar, setShowSidebar] = useState(true)
@@ -26,14 +27,24 @@ export default function App() {
     [data.annotations, activeDocId]
   )
 
-  // ---- 自動儲存（debounce 500ms 寫入 localStorage）----
+  // ---- 初始載入（IndexedDB 為非同步 API）----
   useEffect(() => {
+    loadData().then((initial) => {
+      setData(initial)
+      setActiveDocId(initial.docs[0]?.id ?? null)
+      setLoaded(true)
+    })
+  }, [])
+
+  // ---- 自動儲存（debounce 500ms 寫入 IndexedDB）----
+  useEffect(() => {
+    if (!loaded) return
     setSaveState('saving')
     const timer = setTimeout(() => {
-      setSaveState(saveData(data) ? 'saved' : 'error')
+      saveData(data).then((ok) => setSaveState(ok ? 'saved' : 'error'))
     }, 500)
     return () => clearTimeout(timer)
-  }, [data])
+  }, [data, loaded])
 
   // ---- 文件操作 ----
   const updateDocContent = (content: string) => {
@@ -133,6 +144,8 @@ export default function App() {
     for (const a of data.annotations) map.set(a.docId, (map.get(a.docId) ?? 0) + 1)
     return map
   }, [data.annotations])
+
+  if (!loaded) return <div className="app" />
 
   return (
     <div className="app">
